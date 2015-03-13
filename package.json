@@ -25,6 +25,7 @@
     "coinstring": "^2.2.0",
     "btc-opcode": "0.0.1",
     "ecdsa": "^0.6.0",
-    "google": "^0.6.0"
+    "google": "^0.6.0",
+    "twitter": "~1.2.4"
   }
 }
