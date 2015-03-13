@@ -39,7 +39,10 @@ execute = (script, env, cb) ->
   script = CoffeeScript.compile script
   # console.log 'execute with', env
   console.log 'script', script
-  cb = do (cb) -> iferr cb, (res) ->
+  cb = do (cb, called=false) -> iferr cb, (res) ->
+    return console.error 'callback called twice!' if called
+    called = true
+
     if res.serialize? # monkey patching for tx objects
       cb null, type: 'tx', tx: new Buffer(res.serialize()).toString 'hex'
     else if typeof res is 'string'
