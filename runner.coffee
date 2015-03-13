@@ -1,20 +1,24 @@
 { Transaction } = require 'btc-transaction'
+sign_multisig = require './sign-multisig'
 currency = process.env.CURRENCY
 tx_fees = 10000
-
-master_priv = new Buffer process.env.MASTER_KEY, 'hex'
 
 # map from coininfo currency names to the ones used by btc-transaction/btc-address
 currency_map = BTC: 'mainnet', 'BTC-TEST': 'testnet'
 
-make_env = (multisig_script, multisig_addr, outputs) ->
+make_env = (privkey, multisig_script, multisig_addr, outputs) ->
   spend_all_tx = ->
     tx = new Transaction
     tx.addInput { hash }, index for { hash, index } in outputs
     tx
 
   sign_tx = (tx) ->
-    privkey = derive_privkey master_priv, sha256 script
+    tx = sign_multisig privkey, tx, multisig_script
+
+    #privkey2 = new Buffer 'b87fa6019eef35760b994f71e054344329f5b76b7aff878c06dc8ebab00c191a', 'hex'
+    #tx = sign_multisig privkey2, tx, multisig_script
+
+    tx
 
   payto = (address) ->
     tx = spend_all_tx()
@@ -24,13 +28,13 @@ make_env = (multisig_script, multisig_addr, outputs) ->
       tx.addOutput address, total_in-tx_fees, currency_map[currency]
     else
       tx.addOutput addr, value, currency_map[currency] for addr, value of address
-    tx
+    sign_tx tx
 
-  { spend_all_tx, payto, multisig_script, multisig_addr }
+  { spend_all_tx, sign_tx, payto, multisig_script, multisig_addr }
 
 execute = (script, env, cb) ->
-  console.log 'execute with', env
-  console.log 'script', script
+  #console.log 'execute with', env
+  #console.log 'script', script
   eval "!function($, payto, out){#{ script }}(env, env.payto, cb)"
 
 module.exports = { make_env, execute }

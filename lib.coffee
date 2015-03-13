@@ -23,15 +23,18 @@ load_unspent_outputs = (address, cb) ->
   client.addressUnspentOutputs address, {}, iferr cb, ({ data }) ->
     cb null, data
 
-create_oracle_cpub = (contract_script, alice_pub, bob_pub) ->
-  derive_pub master_pub, sha256 contract_script
+create_oracle_keys = (contract_script, alice_pub, bob_pub) ->
+  chaincode = sha25 contract_script
+
+  pub: derive_pub master_pub, chaincode
+  priv: derive_priv master_priv, chaincode
 
 create_multisig = (oracle_pub, alice_pub, bob_pub) ->
   pubkeys_ba = [ oracle_pub, alice_pub, bob_pub ].map (x) -> Array.apply null, x
-  multisig_script = new Buffer createMultiSigOutputScript(2, pubkeys_ba, true).buffer
-  scripthash = sha256ripe160 multisig_script
+  multisig_script = createMultiSigOutputScript(2, pubkeys_ba, true)
+  scripthash = sha256ripe160 multisig_script.buffer
   multisig_addr = coinstring.encode scripthash, versions.scripthash
-  multisig_addr = '2N16pTCqfPMXwMQm9gfKoRuQMETvGyznG1u'
+  # multisig_addr = '2N16pTCqfPMXwMQm9gfKoRuQMETvGyznG1u'
   { multisig_script, multisig_addr }
 
 derive_pub = (parent, chain_code) ->
@@ -46,5 +49,5 @@ derive_priv = (parent, chain_code) ->
   hd.privateKey = parent
   hd.deriveChild(0).privateKey
 
-module.exports = { load_unspent_outputs, create_oracle_cpub, create_multisig }
+module.exports = { load_unspent_outputs, create_oracle_keys, create_multisig }
 

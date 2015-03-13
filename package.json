@@ -22,6 +22,8 @@
     "body-parser": "^1.12.0",
     "btc-script": "^0.1.12",
     "coininfo": "^0.3.1",
-    "coinstring": "^2.2.0"
+    "coinstring": "^2.2.0",
+    "btc-opcode": "0.0.1",
+    "ecdsa": "^0.6.0"
   }
 }

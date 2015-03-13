@@ -1,7 +1,7 @@
 iferr = require 'iferr'
 bodyParser = require 'body-parser'
 
-{ load_unspent_outputs, create_oracle_cpub, create_multisig } = require './lib'
+{ load_unspent_outputs, create_oracle_keys, create_multisig } = require './lib'
 { make_env, execute } = require './runner'
 
 ((ctx, fn) -> fn.call ctx) (do require 'express'), ->
@@ -15,13 +15,17 @@ bodyParser = require 'body-parser'
     alice_pub = new Buffer alice_pub, 'hex'
     bob_pub = new Buffer bob_pub, 'hex'
 
-    oracle_pub = create_oracle_cpub script, alice_pub, bob_pub
+    { pub: oracle_pub, priv: oracle_priv } = create_oracle_keys script, alice_pub, bob_pub
     { multisig_script, multisig_addr } = create_multisig oracle_pub, alice_pub, bob_pub
 
     load_unspent_outputs multisig_addr, iferr next, (outputs) ->
-      env = make_env multisig_script, multisig_addr, outputs
+      #console.log 'multisig script', new Buffer(multisig_script.buffer).toString('hex')
+      #console.log 'multisig addr', multisig_addr
+      env = make_env oracle_priv, multisig_script, multisig_addr, outputs
       try execute script, env, iferr next, (tx) ->
-        res.send tx
+        if tx?.serialize?
+          res.send new Buffer(tx.serialize()).toString 'hex'
+        else res.sendStatus 400
       catch err then next err
 
   @listen @settings.port, =>
