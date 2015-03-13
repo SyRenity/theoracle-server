@@ -26,6 +26,7 @@
     "btc-opcode": "0.0.1",
     "ecdsa": "^0.6.0",
     "twitter": "~1.2.4",
-    "google": "~0.6.0"
+    "google": "~0.6.0",
+    "superagent": "~1.0.0"
   }
 }
