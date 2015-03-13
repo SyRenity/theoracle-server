@@ -11,7 +11,7 @@ currency_map = BTC: 'mainnet', 'BTC-TEST': 'testnet'
 make_env = (privkey, multisig_script, multisig_addr, outputs) ->
   spend_all_tx = ->
     tx = new Transaction
-    tx.addInput { hash }, index for { hash, index } in outputs
+    tx.addInput { hash }, index for { transaction_hash: hash, output_index: index } in outputs
     tx
 
   sign_tx = (tx) ->
