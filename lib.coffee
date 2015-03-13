@@ -14,6 +14,8 @@ api_secret = process.env.BLOCKTRAIL_API_SECRET or throw new Error 'BLOCKTRAIL_AP
 master_priv = new Buffer process.env.MASTER_KEY, 'hex'
 master_pub = curve.G.multiply(BigInteger.fromBuffer master_priv).getEncoded(true)
 
+console.log 'priv->pub - ',master_priv.toString('hex'),'->',master_pub.toString('hex')
+
 currency = process.env.CURRENCY
 { versions } = coininfo currency
 
@@ -24,12 +26,13 @@ load_unspent_outputs = (address, cb) ->
     cb null, data
 
 create_oracle_keys = (contract_script, alice_pub, bob_pub) ->
-  chaincode = sha25 contract_script
+  chaincode = sha256 contract_script
 
   pub: derive_pub master_pub, chaincode
   priv: derive_priv master_priv, chaincode
 
 create_multisig = (oracle_pub, alice_pub, bob_pub) ->
+  console.log 'multisig keys', [ oracle_pub, alice_pub, bob_pub ].map (x) -> x.toString 'hex'
   pubkeys_ba = [ oracle_pub, alice_pub, bob_pub ].map (x) -> Array.apply null, x
   multisig_script = createMultiSigOutputScript(2, pubkeys_ba, true)
   scripthash = sha256ripe160 multisig_script.buffer
@@ -38,6 +41,7 @@ create_multisig = (oracle_pub, alice_pub, bob_pub) ->
   { multisig_script, multisig_addr }
 
 derive_pub = (parent, chain_code) ->
+  console.log 'derive pub with chain', parent.toString('hex'), '->', chain_code.toString 'hex'
   hd = new HDKey
   hd.chainCode = chain_code
   hd.publicKey = parent

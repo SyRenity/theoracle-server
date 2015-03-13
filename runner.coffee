@@ -1,4 +1,6 @@
 { Transaction } = require 'btc-transaction'
+iferr = require 'iferr'
+CoffeeScript = require 'coffee-script'
 sign_multisig = require './sign-multisig'
 currency = process.env.CURRENCY
 tx_fees = 10000
@@ -21,6 +23,7 @@ make_env = (privkey, multisig_script, multisig_addr, outputs) ->
     tx
 
   payto = (address) ->
+    return 'No contract funds to spent.' unless outputs.length
     tx = spend_all_tx()
     if typeof address is 'string'
       total_in = 0
@@ -30,11 +33,19 @@ make_env = (privkey, multisig_script, multisig_addr, outputs) ->
       tx.addOutput addr, value, currency_map[currency] for addr, value of address
     sign_tx tx
 
-  { spend_all_tx, sign_tx, payto, multisig_script, multisig_addr }
+  { spend_all_tx, sign_tx, payto, multisig_script, multisig_addr, outputs, Transaction }
 
 execute = (script, env, cb) ->
-  #console.log 'execute with', env
-  #console.log 'script', script
+  script = CoffeeScript.compile script
+  # console.log 'execute with', env
+  console.log 'script', script
+  cb = do (cb) -> iferr cb, (res) ->
+    if res.serialize? # monkey patching for tx objects
+      cb null, type: 'tx', tx: new Buffer(res.serialize()).toString 'hex'
+    else if typeof res is 'string'
+      cb null, type: 'msg', message: res
+    else
+      cb new Error 'unknown contract output'
   eval "!function($, payto, out){#{ script }}(env, env.payto, cb)"
 
 module.exports = { make_env, execute }
